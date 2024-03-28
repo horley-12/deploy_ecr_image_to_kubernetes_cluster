@@ -6,27 +6,27 @@ pipeline{
     stages{
         stage('CompileandRunSonarAnalysis') {
             steps {	
-		    withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=tech365sec -Dsonar.organization=tech365sec -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN'
+		    withCredentials([string(credentialsId: 'HORLEY_TOKEN', variable: 'HORLEY_TOKEN')]) {
+    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=horleysec1 -Dsonar.organization=horleysec1 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$HORLEY_TOKEN'
 }
 
 		
 			}
         } 
-	    stage('RunSCAAnalysisUsingSnyk') {
-            steps {		
-				withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
-					sh 'mvn snyk:test -fn'
-				}
-			}
-    }	
+	     stage('RunSCAAnalysisUsingSnyk') {
+             steps {		
+			 	withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
+			 		sh 'mvn snyk:test -fn'
+			 	}
+			 }
+     }	
         stage('Build'){
             steps{
                 withDockerRegistry(
-                    [credentialsId:"dockerlogin", url: ""]
+                    [credentialsId:"horleydockerlogin", url: ""]
                 )  {
                     script{
-                    app = docker.build("asg")
+                    app = docker.build("horleyasg")
                     }
                 }
             }
@@ -35,7 +35,7 @@ pipeline{
         stage('Push'){
             steps{
                 script{
-                    docker.withRegistry("https://924338258393.dkr.ecr.us-east-1.amazonaws.com", "ecr:us-east-1:aws-credentials"){
+                    docker.withRegistry("https://992382399201.dkr.ecr.us-east-1.amazonaws.com", "ecr:us-east-1:horley-aws-credentials"){
                         app.push("latest")
                     }
                     
@@ -43,8 +43,6 @@ pipeline{
                 }
             }
         }
-
-
 // deploy to kubernetes cluster
 
     stage('Kubernetes Deployment of Easy Buggy Web Application') {
